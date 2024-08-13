@@ -11,17 +11,21 @@ interface Props {
 export default function DeleteBtn({ article_id, user_id }: Props) {
   const router = useRouter();
   const deleteData = async () => {
-    const response = await deleteArticle({
-      article_id: article_id,
-      user_id: user_id,
-    });
-    if (response.status == 200 || response.status == 404) {
-      router.push("/dashboard");
+    try {
+      const response = await deleteArticle({
+        article_id: article_id,
+        user_id: user_id,
+      });
+      if (response.status == 200 || response.status == 404) {
+        return router.push("/dashboard");
+      }
+    } catch (err: unknown) {
+      console.error("An unknown error occurred");
     }
   };
   return (
-    <div onClick={deleteData}>
-      <Btn type="button">삭제</Btn>
-    </div>
+    <Btn type="button" onClick={deleteData}>
+      삭제
+    </Btn>
   );
 }

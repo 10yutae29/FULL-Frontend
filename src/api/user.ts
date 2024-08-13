@@ -5,13 +5,13 @@ export const getUserInfo = async () => {
   return response;
 };
 
-export const getNewTokens = async (refreshtoken: string) => {
+export const getNewTokens = async () => {
+  const refreshtoken = localStorage?.getItem("refreshtoken");
   const response = await api.get("/token/refresh", {
     headers: {
       refreshtoken,
     },
   });
-
   if (response.status == 200) {
     const accessToken = response.headers.authorization.replace("Bearer ", "");
     const refreshToken = response.headers.refreshtoken;

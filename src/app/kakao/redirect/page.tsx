@@ -3,9 +3,17 @@
 import { getLogin } from "@/api/user";
 import { useLoginStore } from "@/store/store";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 
 export default function page() {
+  return (
+    <Suspense>
+      <Loading />
+    </Suspense>
+  );
+}
+
+function Loading() {
   const param = useSearchParams();
   const router = useRouter();
   const { login } = useLoginStore();

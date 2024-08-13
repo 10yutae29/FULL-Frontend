@@ -13,7 +13,7 @@ export default function useRefreshTokenAlive() {
       ?.replaceAll('"', "");
 
     const updateTokens = async () => {
-      const response = await getNewTokens(refreshtoken as string);
+      const response = await getNewTokens();
 
       if (response.status == 200) {
         const userInfo = await getUserInfo();

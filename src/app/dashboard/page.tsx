@@ -1,10 +1,9 @@
-// "use client";
-
 import { getAllArticles } from "@/api/article";
 import Btn from "@/components/Btn";
 import { dateFormat } from "@/utils/date";
 import Link from "next/link";
-
+export const dynamic = "force-dynamic";
+// 'auto' | 'force-dynamic' | 'error' | 'force-static'
 export default async function page() {
   const menu = ["제목", "작성자", "작성 일시"];
   interface Data {
