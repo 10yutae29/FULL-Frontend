@@ -2,6 +2,7 @@
 
 import { postArticle } from "@/api/article";
 import Btn from "@/components/Btn";
+import { customRevalidatePath } from "@/utils/customRevalidatePath";
 import { useRouter } from "next/navigation";
 import React from "react";
 interface Data {
@@ -22,6 +23,7 @@ export default function page() {
 
     const res = await postArticle(data);
     if (res.status === 200) {
+      customRevalidatePath("/dashboard");
       router.push(`/dashboard/${res.data.id}`);
     }
   };

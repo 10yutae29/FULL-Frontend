@@ -80,6 +80,49 @@ tailwind css
 -  위 사진처럼 Route Handlers와 Server Actions 두가지 상황에서 적용 가능하다 했는데, 이 프로젝트에선 Route Handlers로 데이터를 가져오지 않고, express로 따로 백엔드 서버를 구성했기 때문에 Server Actions를 알아봤다.
 - Server Actions는 서버에서 실행되는 비동기 함수라고 한다. Next.js에서 form submission 또는 data mutations에 사용된다.
 - 이 Server Actions로 게시글 작성하는 로직을 변경한 뒤 적용했지만 동작하지 않았다.
-- 애초에 내 목적은 게시글을 작성하면 게시글 리스트로 이동하고, (작성한 게시글이 포함된) 최신화된 게시글 리스트를 보는 것이었다.
-- 즉 Server Actions로 게시글 작성이 완료되면 revalidatePath를 사용해 게시글 리스트 페이지를 최신화 하는 것이 목표 -> 게시글 작성 API가 LocalStorage에 있는 access token을 필요로 했고, **Server에서 동작하는 Server Actions는 브라우저의 localStorage를 읽지 못했다.**
-- 때문에 revalidatePath와 Server Actions를 활용한 게시글 리스트 최신화 개발은 실패했고, fetch를 일부 도입하는 것을 더 고민해봐야겠다.
+- 내가 원했던 것은 게시글 작성 후 게시글 리스트 페이지로 이동하면서, 최신화된 리스트를 보여주는 것이었다. 그러나 Server Actions에서 게시글 작성 API를 호출할 때, API가 브라우저의 LocalStorage에 있는 access token을 필요로 했기 때문에 문제가 발생했다. **Server Actions는 서버에서 동작하기 때문에 브라우저의 localStorage에 접근할 수 없었다.**
+- 결국 `revalidatePath`와 Server Actions를 이용한 게시글 리스트 최신화 개발은 실패했으며, **fetch를 일부 도입**하는 것을 고려해야 할 것 같다.
+
+
+
+### ~~고민되는 점~~
+
+- ~~Next.js에선 fetch API를 확장한 API를 제공하기 때문에 fetch를 사용해야 Next.js의 기능들(데이터 or 서버 컴포넌트 revalidate)을 사용 가능~~
+- ~~axios는 Next.js의 API와 호환이 되지 않지만, axios.interceptor를 사용해 모든 API요청에 access_token을 담거나 만료시 refresh_token을 활용해 재발급하고 다시 API를 재요청하는 기능 구현 용이 + 자동 json화~~
+- ~~axios를 사용하는 가장 큰 이유는 interceptor다. 그러나 interceptor 하나만을 위해 fetch API를 포기함으로써 Next.js의 핵심 API들을 사용하지 못하는것이 큰 손해라고 생각한다.~~
+- ~~때문에 axios -> fetch API로 변경하기로 결심~~
+  - ~~fetch API로 interceptor 기능 만들기 참고(https://velog.io/@wjk6044/token-logic-without-axios1)~~
+
+
+
+### Axios Revalidate 문제 해결
+
+```javascript
+"use server";
+
+import { revalidatePath } from "next/cache";
+
+export const customRevalidatePath = (path: string) => {
+  revalidatePath(path);
+};
+
+```
+
+```javascript
+// axios 요청
+const res = await postArticle(data);
+
+if (res.status === 200) {
+  customRevalidatePath("/dashboard");
+  router.push(`/dashboard/${res.data.id}`);
+```
+
+revalidatePath만을 서버 액션으로 분리하고 이를 클라이언트 컴포넌트에서 활용해 해결했다.
+
+Next.js의 [Server Actions 공식문서](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)의 예시만 보고 시야가 좁아져 데이터 패칭 로직이 Server Actions에 같이 포함되어야 revalidatePath를 활용 가능한줄로 착각했다.
+
+물론 fetch API에 캐싱 시간을 적용시키는 것, 데이터 단위(토큰)로 revalidate하는 것은 불가능하지만, 내가 원하는 시점에 컴포넌트를 revalidate하고 Axios.interceptor 기능을 유지할 수 있었다.
+
+현재는 프로젝트가 작아서 한페이지에 하나의 API 요청만 존재하지만 만약 프로젝트가 커져서 한 페이지에 다수의 API요청이 필요한 경우 토큰을 통해 API를 개별적으로 revalidate하는것이 효율적이라 생각한다.
+
+따라서 이 이후에 Next.js를 도입해서 프로젝트를 수행하고, Next.js의 API가 Axios까지 확장되지 않았다면 나는 무조건 fetch API를 사용할 것 같다.
