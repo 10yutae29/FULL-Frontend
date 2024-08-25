@@ -10,11 +10,7 @@ export const getArticle = async (id: string) => {
   return response;
 };
 
-interface PostPayload {
-  title: string;
-  content: string;
-}
-export const postArticle = async (payload: PostPayload) => {
+export const postArticle = async <T>(payload: T) => {
   const response = await api.post(`/article`, payload);
   return response;
 };
@@ -27,5 +23,10 @@ export const deleteArticle = async (article: DeletePayload) => {
   const response = await api.delete(
     `/article?article_id=${article.article_id}&user_id=${article.user_id}`
   );
+  return response;
+};
+
+export const updateArticle = async <T, K>(payload: T, id: K) => {
+  const response = await api.put(`/article/${id}`, payload);
   return response;
 };

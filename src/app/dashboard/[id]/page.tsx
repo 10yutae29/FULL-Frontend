@@ -1,6 +1,7 @@
 import { getArticle } from "@/api/article";
 import { dateFormat } from "@/utils/date";
 import DeleteBtn from "./deleteBtn";
+import UpdateBtn from "./UpdateBtn";
 
 export default async function page({ params }: { params: { id: string } }) {
   interface Article {
@@ -20,6 +21,7 @@ export default async function page({ params }: { params: { id: string } }) {
       <div>{dateFormat(article.created_at as string)}</div>
       <div>{article.content}</div>
       <DeleteBtn article_id={article.article_id} user_id={article.user_id} />
+      <UpdateBtn writer_id={article.user_id} />
     </div>
   );
 }
